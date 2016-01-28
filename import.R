@@ -243,7 +243,7 @@ import_genes <- function(Genes, Directory, Pattern="_eQTL.txt"){
 }
 
 read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
-                      Chr_Pos_col, Rsid_col, Pos_col, MAF_col, N_col,
+                      Chr_pos_col, Rsid_col, Pos_col, MAF_col, N_col,
                       PV_col, Beta_col, Varbeta_col, Var_is_SE = TRUE){
   # This function imports one GLGC .txt file and
   # 	returns a table with summary stats for coloc.abf()
@@ -300,8 +300,8 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
   if(Columns%%1!=0){stop("Columns needs to be an integer")}
 
   # Check that Chr_pos is an integer
-  if(!(is.numeric(Chr_col_pos))){stop("Chr_col_pos needs to be an integer")}
-  if(Chr_col_pos%%1!=0){stop("Chr_col_pos needs to be an integer")}
+  if(!(is.numeric(Chr_pos_col))){stop("Chr_pos_pos needs to be an integer")}
+  if(Chr_pos_col%%1!=0){stop("Chr_pos_col needs to be an integer")}
 
   # Check that Skip is an integer >=0
   if(!(is.numeric(Skip))){stop("Skip needs to be an integer")}
