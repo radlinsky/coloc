@@ -61,8 +61,8 @@ trait_table <- read_GWAS(File_path=GWAS_file,
                          Rsid_col=1, 
                          Pos_col=4,
                          MAF_col=8,
-                         N_col,            # Using beta and varbeta, not N and PV
-                         PV_col,           # Using beta and varbeta, not N and PV
+                         #N_col,            # Using beta and varbeta, not N and PV
+                         #PV_col,           # Using beta and varbeta, not N and PV
                          Beta_col=9,
                          Varbeta_col=10,
                          Var_is_SE = TRUE)
@@ -146,8 +146,8 @@ for (gene_row in seq(from=1,to=n_genes_to_analyze)){
                           Chr_col=3,
                           Rsid_col=2,
                           Pos_col=4,
-                          N_col,       # Using beta and varbeta
-                          PV_col,      # Using beta and varbeta
+                          #N_col,       # Using beta and varbeta
+                          #PV_col,      # Using beta and varbeta
                           Beta_col=9,
                           Varbeta_col=10,
                           Var_is_SE = TRUE)
