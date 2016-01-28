@@ -181,7 +181,7 @@ get_gene_names <- function(directory, Pattern="_eQTL.txt"){
   
   # Unlist the lists into matrices (the file has 2 segments)
   # Each row is a split file name
-  split <- matrix(unlist(split_period),ncol=2,byrow=TRUE)
+  split <- matrix(unlist(split),ncol=2,byrow=TRUE)
   
   # Build dataframe
   genes <- data.frame(
