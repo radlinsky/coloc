@@ -5,7 +5,7 @@
 ### 2015_1_26
 
 ### This script parses a file by a specified column, and writes to
-###  file groups of rows that match into their own files. Files are named by their row group. 
+###  file groups of rows that match. Files are named by their row group. 
 ###
 ###  Arguments:
 ###    input_file.txt: input txt file
@@ -20,7 +20,7 @@
 ###      keep_6_2_4 = keep the 7th, 3rd, and 5th columns..
 ###
 ###  Assumptions:
-###    The file is sorted by the column of interest
+###    The file is bash-sortable by the column of interest
 ###    The 'Column_#' command line argument is a valid column index
 ###	Type = <int>
 ###     (0 = first column)
@@ -37,6 +37,7 @@ import sys
 import os
 import gzip
 import csv
+from subprocess import call
 
 print "Initiating folderize_by_column.py"
 print "Argument List:", str(sys.argv[1:])
@@ -89,6 +90,73 @@ print "Keeping column(s): "+str(cols_to_keep)
 all_row_groups = list()
 row_group = "INITIATED"
 
+def bash_sort(File, In_dir, Out_dir, Col, Header = True):
+	""" Bash sort a file, return location of sorted file.
+
+		Arguments:
+			File: 	"my_fav_file.txt"
+			In_dir: "/my_directory/" [optional, you may make File a the full filepath instead
+			Out_dir:"/some_dir" where sorted file is saved
+			Col:	integer. Which column to sort by? [1 = first column]
+			Header: boolean. Does the file have a header?
+
+		Assumptions:
+			File is not gz-zipped (or compressed at all)
+			File ends in '.'txt'
+			File has a single lined header, or no header
+
+		Returns: filepath of the sorted file
+	"""
+	if type(File) is not str or type(In_dir) is not str or type(Out_dir) is not str:
+		raise ValueError("File, In_dir, and Out_dir need to be strings.")
+	if type(Col) is not int or Col < 0:
+		raise ValueError("Col needs to be an integer > 0.")
+	if len(In_dir) > 0:	
+		if not (os.path.isdir(In_dir)):
+			raise ValueError(In_dir+" not found.")
+		if In_dir[-1] != "/":
+			raise ValueError("In_dir needs to end with a forward slash.")
+	if len(Out_dir) > 0:	
+		if not (os.path.isdir(Out_dir)):
+			raise ValueError(Out_dir+" not found.")
+		if Out_dir[-1] != "/":
+			raise ValueError("Out_dir needs to end with a forward slash.")
+	if File[-4:] != ".txt":
+		raise ValueError("Please only use this function on .txt files.")
+	if not os.path.isfile(In_dir+File):
+		raise ValueError(File+" not found in directory\n"+In_dir)
+
+	print "Passed bash_sort checks."
+
+	in_file_path = In_dir + File
+	out_file_path = Out_dir + File[:-4]+"_sorted.txt"
+	if Header:
+		# Save the header to out_file
+		command = "head " + in_file_path + " -n 1 > " + out_file_path
+		call([command], shell= True)
+		# Which column will be sorted by
+		sort_at = str(Col)+","+str(Col)
+		# This sorts the file, but skips the header when sorting it, and writes teh result to file
+		command = "tail -n +2 " + in_file_path + " | sort -k " + sort_at + " >> " + out_file_path
+		call([command], shell = True)
+	# Else no header
+	else:
+		# Sort the file at specified column
+		sort_at = str(Col)+","+str(Col)
+		command = "sort "+in_file_path + " -k " + sort_at + " > " + out_file_path
+		call([command], shell=True)
+
+	return out_file_path
+
+try:
+	in_FILE = bash_sort(File = in_FILE, 
+				In_dir = "",
+				Out_dir = "",
+				Col = Column_index+1,
+				Header = True)
+except BaseException:
+	raise StandardError("bash_sort failed.")
+
 f_IN = open(in_FILE, 'rb')
 line_i = 1
 for line in f_IN:
@@ -97,7 +165,7 @@ for line in f_IN:
 	# First line is header, save it and look at the next line
 	if line_i == 1:
 		# If you want to keep all columns:
-		if keep_col == "all":
+		if cols_to_keep == "all":
 			# Get number of columns in header of file
 			n_cols = len(split_line)
 			# make keep_col a list of all column indeces
@@ -169,4 +237,3 @@ f_IN.close()
 for row_group in all_row_groups:
 	print row_group[0]+": "+str(row_group[2]-row_group[1]+1)+" element(s)."
 print "Completed folderize_by_column.py"
-
