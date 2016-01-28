@@ -349,7 +349,7 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col, Rsid_col, P
   names(table) <- table_names
   
   # P-values imported:
-  if(!(missing(PV_col)){
+  if(!(missing(PV_col))){
 	# Convert pvalues to doubles; any pvalue below R's minimum recognizable number
 	#  is converted to 1e-300:
 	table$pvalues <- as.double(table$pvalues)
