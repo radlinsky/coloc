@@ -159,7 +159,7 @@ read_eQTL <- function(File_path,
   return(table)
 }
 
-get_gene_names <- function(directory, Pattern="_eQTL.txt"){
+get_gene_names <- function(directory, Pattern=".txt"){
   # Given a directory containing eQTL .txt files,
   #   extract the gene names and their chromosmes. Pattern is
   #   defaulted to identify CLI snptest files.
@@ -176,8 +176,8 @@ get_gene_names <- function(directory, Pattern="_eQTL.txt"){
   # Extract all file names with matching grep pattern from directory
   base_file_name <- list.files(path=directory, pattern=Pattern)
 
-  # Split file name at "_"
-  split <- strsplit(x=base_file_name, split="_")
+  # Split file name at "."
+  split <- strsplit(x=base_file_name, split="\\.")
   
   # Unlist the lists into matrices (the file has 2 segments)
   # Each row is a split file name

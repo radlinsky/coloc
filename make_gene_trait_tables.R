@@ -50,7 +50,7 @@ eQTL_directory <- args[["eQTL_dir"]]
 # eQTL_directory <- "/project/chrbrolab/coloc/data/ivs/"
 
 # Retrieve list of genes matching the pattern below and assign filepath to each gene
-genes <- get_gene_names(directory= eQTL_directory, Pattern="_eQTL.txt")
+genes <- get_gene_names(directory= eQTL_directory, Pattern=".txt")
 
 # Import the GWAS table (this will be slow)
 trait_table <- read_GWAS(File_path=GWAS_file,
