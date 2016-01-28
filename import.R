@@ -177,17 +177,17 @@ get_gene_names <- function(directory, Pattern=".txt"){
   base_file_name <- list.files(path=directory, pattern=Pattern)
 
   # Split file name at "."
-  split <- strsplit(x=base_file_name, split="\\.")
+  split <- strsplit(x=base_file_name, split=".txt")
   
   # Unlist the lists into matrices (the file has 2 segments)
   # Each row is a split file name
-  split <- matrix(unlist(split),ncol=2,byrow=TRUE)
+  split <- matrix(unlist(split),ncol=1,byrow=TRUE)
   
   # Build dataframe
   genes <- data.frame(
               gene=split[,1], 			#GeneName
               filename=base_file_name,
-              filepath = paste(irectory, base_file_name,sep=""),
+              filepath = paste(directory, base_file_name,sep=""),
               stringsAsFactors = FALSE	# Strings should be strings
               )
 			  
