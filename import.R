@@ -316,7 +316,7 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col, Rsid_col, P
     colClasses <- rep("NULL", Columns)
   	table_names <- rep("",Columns)
   	table_names[Pos_col] <- "position"
-  	table_names[Rsid_pos] <- "rsid" 
+  	table_names[Rsid_col] <- "rsid" 
   	table_names[MAF_col]<- "MAF"
   	table_names[Beta_col] <- "beta_eQTL"
   	table_names[Varbeta_col] <- "varbeta_eQTL"
