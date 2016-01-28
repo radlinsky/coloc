@@ -3,16 +3,17 @@
 # wrapper.R
 # Caleb Matthew Radens
 # cradens@mail.med.upenn.edu
-# Last Update: 2016_1_19
+# Last Update: 2016_1_28
 
-# This is a wrapper script that runs coloc.abf() on CLI eQTL<->GLGC GWAS[TODO], genome wide
+# This is a wrapper script that runs coloc.abf() on eQTL<->GWAS, genome wide
 #  The output is
-# chr|start|end|gene|trait|gene_trait_hyp0|gene_trait_hyp1|gene_trait_hyp2|gene_trait_hyp3|gene_trait_hyp4|snp_hyp4|eQTL_lABF|eQTL_credible|GWAS_lABF|GWAS_credible|both_credible
+# chr|start|end|gene|trait|gene_trait_hyp0|gene_trait_hyp1|gene_trait_hyp2|gene_trait_hyp3|
+#   gene_trait_hyp4|snp_hyp4|eQTL_lABF|eQTL_credible|GWAS_lABF|GWAS_credible|both_credible
 #
 # This script depends on import.R, coloc_analysis, get_coloc_summaries.R, and make_gene_trait_tables.R
-# (see those scripts for details)
+#   (see those scripts for details)
 # All three scripts (those mentioned ^^^ and make_gene_trait_tables.R) should be located in
-# the same directory.
+#   the same directory.
 
 # I tested this script using the PMACS R module 3.1.1
 system("echo ===========================",wait=FALSE)
@@ -44,10 +45,14 @@ source("import.R")
 system("echo wrapper package and script dependencies loaded and checked",wait=FALSE)
 
 # Directory in chrbrolab:
-GWAS_directory <- "/project/chrbrolab/coloc/data/endpoint/"
+# GWAS_directory <- "/project/chrbrolab/coloc/data/endpoint/"
+GWAS_directory <- "/project/chrbrolab/analysis/cradens/coloc_for_yoson/data/GWASs/"
 
 # Retreive list of traits from GWAS_directory and assign full filepaths to them
-traits <- get_GLGC_traits(GWAS_directory)
+traits <- get_GWAS_traits(directory = GWAS_directory, Pattern = "GLGC")
+
+eQTL_directory <- "/project/chrbrolab/analysis/cradens/coloc_for_yoson/data/eQTLs/Liver/"
+
 
 # For each trait, launch make_gene_trait_tables.R script
 for (row in seq(from=1,to=length(traits$filepath))){
@@ -56,6 +61,7 @@ for (row in seq(from=1,to=length(traits$filepath))){
   sys_arg <- paste("bsub -e make_gene_trait_tables.err -o make_gene_trait_tables.out Rscript make_gene_trait_tables.R ",
                    "--","file ",file, " ",
                    "--","trait ",trait, " ",
+                   "--","eQTL_dir ",eQTL_directory, " ",
                    sep="")
   # NOTE: wait=TRUE means R will submit a job, wait for it to finish, and then
   # continue. Setting it to FALSE utilizes the parallel computing capabilities of

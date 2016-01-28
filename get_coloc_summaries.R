@@ -46,29 +46,29 @@ cat(length(merged_table[,1])," shared SNPs to be analyzed for colocalisation ","
 #   SNPs will be named according to their hg19 position
 snp <- as.character(merged_table[,'position'])
 
-# When two tables are merged with matching columns, the first table's column
-#   is renames to 'column_name.x', and the second becomes 'column_name.y'
-#   For the purpose of this function, save only the eQTL's beta.
-beta <- merged_table[,'beta']
-names(beta) <- snp
+beta_GWAS <- merged_table[,'beta_GWAS']
+names(beta_GWAS) <- snp
 
-varbeta <- merged_table[,'varbeta']
-names(varbeta) <- snp
+beta_eQTL <- merged_table[,'beta_eQTL']
+names(beta_eQTL) <- snp
 
-pvalues <- merged_table[,'pvalues']
-names(pvalues) <- snp
+varbeta_eQTL <- merged_table[,'varbeta_eQTL']
+names(varbeta_eQTL) <- snp
+
+varbeta_GWAS <- merged_table[,'varbeta_GWAS']
+names(varbeta_GWAS) <- snp
 
 MAF <- merged_table[,'MAF']
 names(MAF) <- snp
 
-N_eQTL <- merged_table[,'N_eQTL']
-names(N_eQTL) <- snp
+# N_eQTL <- merged_table[,'N_eQTL']
+# names(N_eQTL) <- snp
 
-N_GWAS <- merged_table[,'N_GWAS']
-names(N_GWAS) <- snp
+# N_GWAS <- merged_table[,'N_GWAS']
+# names(N_GWAS) <- snp
 
-eQTL_list <- list(beta = beta, varbeta = varbeta, N = N_eQTL,  type = "quant", snp = snp)
-GWAS_list <- list(pvalues = pvalues, N = N_GWAS,  type = "quant", snp = snp)
+eQTL_list <- list(beta = beta_eQTL, varbeta = varbeta_eQTL, type = "quant", snp = snp)
+GWAS_list <- list(beta = beta_GWAS, varbeta = varbeta_GWAS, type = "quant", snp = snp)
 
 result <- coloc.abf(dataset1 = eQTL_list, dataset2 = GWAS_list, MAF = MAF)
 

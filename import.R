@@ -25,7 +25,18 @@ require(data.table,lib=lp)
 
 system("echo wrapper package and script dependencies loaded and checked",wait=FALSE)
 
-read_eQTL <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col, Rsid_col, Pos_col, N_col, PV_col, Beta_col, Varbeta_col){
+read_eQTL <- function(File_path,
+                      Columns,
+                      Skip=1,
+                      Sep="\t",
+                      Chr_col,
+                      Rsid_col,
+                      Pos_col,
+                      N_col,
+                      PV_col,
+                      Beta_col,
+                      Varbeta_col,
+                      Var_is_SE = TRUE){
   # This function imports one eQTL file and returns
   #		a table with summary stats for coloc.abf()
   #
@@ -49,8 +60,8 @@ read_eQTL <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col, Rsid_col, P
   #		Either N and PV *or* Beta and Varbeta required. NOT ALL 4!!!
   #
   # Returns: table with columns (either N and PV or beta and varbeta):
-  # chr       |rsid      | position  | N_eQTL  | PV_eQTL | beta_eQTL | varbeta_eQTL
-  # character |character | integer   | integer | double  | double    | double
+  # chr       | chr_pos  |rsid      | position  | N_eQTL  | PV_eQTL | beta_eQTL | varbeta_eQTL
+  # character | character|character | integer   | integer | double  | double    | double
 
   # Check for filepath validity
   if(missing(File_path)){stop("Please include file_path")}
@@ -87,6 +98,7 @@ read_eQTL <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col, Rsid_col, P
     else{
     	colClasses <- rep("NULL", Columns)
     	table_names <- rep("",Columns)
+    	table_names[Chr_col] <- "chr"
     	table_names[Pos_col] <- "position"
     	table_names[Rsid_col]<- "rsid"
 			table_names[N_col] <- "N_eQTL"
@@ -99,6 +111,7 @@ read_eQTL <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col, Rsid_col, P
   else if(!(missing(Beta_col)) && !(missing(Varbeta_col))){
     colClasses <- rep("NULL", Columns)
   	table_names <- rep("",Columns)
+  	table_names[Chr_col] <- "chr"
   	table_names[Pos_col] <- "position"
   	table_names[Rsid_pos] <- "rsid" 
   	table_names[Beta_col] <- "beta_eQTL"
@@ -110,6 +123,7 @@ read_eQTL <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col, Rsid_col, P
   else{stop("Please supply N_col and PV_col *or* Beta_col and Varbeta_col")}
   
   colClasses[Pos_col] <- "integer"
+  colClasses[Chr_col] <- "character"
   colClasses[Rsid_col] <- "integer"
 
   # Remove all the NULL columns from the table names
@@ -131,9 +145,16 @@ read_eQTL <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col, Rsid_col, P
   names(table) <- table_names
   
   if (!(missing(Varbeta_col))){
-    # This column is standard error, so square it to make it variance
-    table$varbeta <- (table$varbeta_eQTL)^2
+    # If the variance column is actually SE,
+    if (Var_is_SE){
+      # This column is standard error, so square it to make it into variance
+      table$varbeta_eQTL <- (table$varbeta_eQTL)^2
+    }
+    
   }
+  
+  # Add chr_pos column to table
+  table$chr_pos <- paste(table$chr, table$position, sep="_")
   
   return(table)
 }
@@ -146,7 +167,6 @@ get_gene_names <- function(directory, Pattern="_eQTL.txt"){
   # Arguments:
   #   directory:
   #		  typeof: character
-  #		  format: "/.../gene_name_eQTL.txt"
   #   Pattern: grep pattern to identify relevant files
   #     typeof: character
   #
@@ -167,6 +187,7 @@ get_gene_names <- function(directory, Pattern="_eQTL.txt"){
   genes <- data.frame(
               gene=split[,1], 			#GeneName
               filename=base_file_name,
+              filepath = paste(irectory, base_file_name,sep=""),
               stringsAsFactors = FALSE	# Strings should be strings
               )
 			  
@@ -221,20 +242,17 @@ import_genes <- function(Genes, Directory, Pattern="_eQTL.txt"){
   return(gene_dict)
 }
 
-read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col, Rsid_col, Pos_col, MAF_col, N_col, PV_col, Beta_col, Varbeta_col){
+read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
+                      Chr_Pos_col, Rsid_col, Pos_col, MAF_col, N_col,
+                      PV_col, Beta_col, Varbeta_col, Var_is_SE = TRUE){
   # This function imports one GLGC .txt file and
   # 	returns a table with summary stats for coloc.abf()
   #
   # Argument:
   #   file_path:
   #		  typeof: character
-  #		  format: "base_directory/.../jointGwasMc_trait.txt.gz"
+  #		  format: "base_directory/.../_blah_GWAS_blah.txt"
   #  
-  # 
- 
-  # This function imports one eQTL file and returns
-  #		a table with summary stats for coloc.abf()
-  #
   # Arguments:
   #		File_path: points to a GWAS summary statistics file.
   #			typeof: character
@@ -242,6 +260,7 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col, Rsid_col, P
   #		Columns: Integer number of columns in the file
   #		Skip: If there is meta-data or a header, Skip them.
   #		Chr_col: Column index with chr info
+  #   Chr_pos_col: Column index with Chr:hg19_pos###
   #		Rsid_col: Column index with Rsid info
   #		Pos_col: Column index with hg19 position info
   #		MAF_col: Column index withe the MAF info
@@ -250,12 +269,12 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col, Rsid_col, P
   #		Beta_col: beta column index
   #		Varbeta: variance of beta column index
   # NOTE: 
-  #		File_path, Columns, Chr, Rsid, Pos, and MAF are required.
-  #		Either N and PV *or* Beta and Varbeta required. NOT ALL 4!!!
+  #		File_path, Columns, Chr, Rsid, Pos, MAF, and PV are required.
+  #		Either N *or* Beta and Varbeta required. NOT ALL 3!!!
   #
-  # Returns: table with columns (either N and PV or beta and varbeta):
-  # chr       |rsid      | position  | MAF    | N_GWAS  | PV_GWAS | beta_GWAS | varbeta_GWAS
-  # character |character | integer   | double | integer | double  | double    | double
+  # Returns: table with columns (either N or beta and varbeta):
+  # chr       | chr_pos  | rsid      | position  | MAF    | N_GWAS  | PV_GWAS | beta_GWAS | varbeta_GWAS
+  # character | character| character | integer   | double | integer | double  | double    | double
   #
   # Notes:
   #   - pvalues that are below R's minimum number are converted to 1e-300
@@ -267,14 +286,22 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col, Rsid_col, P
   if(missing(File_path)){stop("Please include file_path")}
   if(!(file.exists(File_path))){stop(paste("File not found:\n",File_path))}
 
-  # Checking that Columns, Chr, Rsid, and Position columns were specified.
-  if(missing(Columns) || missing(Chr_col) || missing(Rsid_col) || missing(Pos_col)){
-    stop("Must include Columns, Chr_col, Rsid_col, and Pos_cols.")
+  # Checking that Columns, Chr, Chr_pos, Rsid, and Position columns were specified.
+  if(missing(Columns) 
+     || missing(Chr_col) 
+     || missing(Chr_pos_col)
+     || missing(Rsid_col) 
+     || missing(Pos_col)){
+    stop("Must include Columns, Chr_col, Chr_pos_col, Rsid_col, and Pos_cols.")
   }
   
   # Check that Columns is an integer
   if(!(is.numeric(Columns))){stop("Columns needs to be an integer")}
   if(Columns%%1!=0){stop("Columns needs to be an integer")}
+
+  # Check that Chr_pos is an integer
+  if(!(is.numeric(Chr_col_pos))){stop("Chr_col_pos needs to be an integer")}
+  if(Chr_col_pos%%1!=0){stop("Chr_col_pos needs to be an integer")}
 
   # Check that Skip is an integer >=0
   if(!(is.numeric(Skip))){stop("Skip needs to be an integer")}
@@ -293,44 +320,51 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col, Rsid_col, P
   if(!(is.numeric(MAF_col))){stop("MAF_col needs to be a double")}
   if(MAF_col%%1!=0){stop("MAF_col needs to be an integer")}
 
-  # If N and PV arguments supplied:
-  if(!(missing(N_col)) && !(missing(PV_col))){
+  # If N argument supplied:
+  if(!(missing(N_col))){
     # Make sure beta and varbeta were *not* also supplied
     if(!(missing(Beta_col)) || !(missing(Varbeta_col))){
-      stop("Please only include N_col and PV_col *OR* Beta_col and Varbeta_col.")
+      stop("Please only include N_col *OR* Beta_col and Varbeta_col.")
     }
     else{
     	colClasses <- rep("NULL", Columns)
     	table_names <- rep("",Columns)
+    	table_names[Chr_col] <- "Chr"
+    	table_names[Chr_pos_col] <- "Chr_pos"
     	table_names[Pos_col] <- "position"
     	table_names[Rsid_col]<- "rsid"
     	table_names[MAF_col]<- "MAF"
-		table_names[N_col] <- "N_eQTL"
-		table_names[PV_col] <- "PV_eQTL"
-		colClasses[N_col] <- "integer"
-		colClasses[PV_col] <- "character"
+  		table_names[N_col] <- "N_GWAS"
+  		table_names[PV_col] <- "PV_GWAS"
+  		colClasses[N_col] <- "integer"
     }
   }
   # If beta and varbeta supplied:
   else if(!(missing(Beta_col)) && !(missing(Varbeta_col))){
     colClasses <- rep("NULL", Columns)
   	table_names <- rep("",Columns)
+  	table_names[Chr_col] <- "Chr"
+  	table_names[Chr_pos_col] <- "Chr_pos"
   	table_names[Pos_col] <- "position"
   	table_names[Rsid_col] <- "rsid" 
   	table_names[MAF_col]<- "MAF"
-  	table_names[Beta_col] <- "beta_eQTL"
-  	table_names[Varbeta_col] <- "varbeta_eQTL"
+  	table_names[PV_col] <- "PV_GWAS"
+  	table_names[Beta_col] <- "beta_GWAS"
+  	table_names[Varbeta_col] <- "varbeta_GWAS"
   	colClasses[Beta_col] <- "double"
   	colClasses[Varbeta_col] <- "double"
   }
   # Else, use didn't supply the appropriate arguments:
-  else{stop("Please supply N_col and PV_col *or* Beta_col and Varbeta_col")}
+  else{stop("Please supply N_col *or* Beta_col and Varbeta_col")}
   
+  colClasses[Chr_col] <- "character"
+  colClasses[Chr_pos_col] <- "character"
   colClasses[Pos_col] <- "integer"
   colClasses[Rsid_col] <- "character"
   colClasses[MAF_col] <- "double"
+  colClasses[PV_col] <- "character"
 
-  # Remove all the NULL columns from the table names
+  # Remove all the empty columns from the table names
   table_names <- table_names[!table_names %in% ""]
   print(table_names)
   
@@ -350,13 +384,21 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col, Rsid_col, P
   
   # P-values imported:
   if(!(missing(PV_col))){
-	# Convert pvalues to doubles; any pvalue below R's minimum recognizable number
-	#  is converted to 1e-300:
-	table$pvalues <- as.double(table$pvalues)
-
-	indeces <- which(table$pvalues == 0)
-
-	table$pvalues[indeces] <- 1e-300
+  	# Convert pvalues to doubles; any pvalue below R's minimum recognizable number
+  	#  is converted to 1e-300:
+  	table$pvalues <- as.double(table$pvalues)
+  
+  	indeces <- which(table$pvalues == 0)
+  
+  	table$pvalues[indeces] <- 1e-300
+  }
+  if (!(missing(Varbeta_col))){
+    # If the variance column is actually SE,
+    if (Var_is_SE){
+      # This column is standard error, so square it to make it into variance
+      table$varbeta_GWAS <- (table$varbeta_GWAS)^2
+    }
+    
   }
 
   # MAF > 0.5? Turn it into 1-MAF
@@ -711,16 +753,16 @@ get_sentinal_snp_regions <- function(GWAS_table,Range=9e5,Cutoff_PV=5e-8){
   #
   # Arguments:
   #   GWAS_table: table with a least the following columns (with indicated names):
-  #     chr:position | pvalues
+  #     chr_pos | PV_GWAS
   #   Range: how far apart sentinal SNPs need to be
   #   Cutoff_PV: what is considered to be genome-wide significant (minimum allowed sentinal SNP PV)
   #
   # Returns:
   #   GWAS_table[at loci determined to be the senitnal SNPs,]
   #
-  significant_PV_indeces <- which(GWAS_table$pvalues<=Cutoff_PV)
-  significant_PVs <- GWAS_table$pvalues[significant_PV_indeces]
-  chr_loci <- matrix(unlist(strsplit(GWAS_table$chr_loci[significant_PV_indeces],split = ":")),ncol=2,byrow=TRUE)
+  significant_PV_indeces <- which(GWAS_table$PV_GWAS<=Cutoff_PV)
+  significant_PVs <- GWAS_table$PV_GWAS[significant_PV_indeces]
+  chr_loci <- matrix(unlist(strsplit(GWAS_table$chr_pos[significant_PV_indeces],split = ":")),ncol=2,byrow=TRUE)
   df <- data.frame(pvalues = significant_PVs,
                    index = significant_PV_indeces,
                    chr =chr_loci[,1],
