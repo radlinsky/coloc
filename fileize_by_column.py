@@ -5,7 +5,7 @@
 ### 2015_1_26
 
 ### This script parses a file by a specified column, and writes to
-###  file groups of rows that match. Files are named by their row group. 
+###  file groups of rows that match. Files are csvs named: row_group.txt
 ###
 ###  Arguments:
 ###    input_file.txt: input txt file
@@ -207,7 +207,7 @@ for line in f_IN:
 		all_row_groups.append(row_group_list)
 
 		# Write the contents of the row_group file list to a csv in its own directory
-		filename = out_DIR+row_group+".BED.csv"
+		filename = out_DIR+row_group+".txt"
 		with open(filename, "wb") as f:
 			writer = csv.writer(f)
 			writer.writerows(row_group_file)
