@@ -58,6 +58,7 @@ read_eQTL <- function(File_path,
   # NOTE: 
   #		File_path, Columns, Chr, Rsid, and Pos are required.
   #		Either N and PV *or* Beta and Varbeta required. NOT ALL 4!!!
+  #   If a row has a NA in it, it will be omitted!
   #
   # Returns: table with columns (either N and PV or beta and varbeta):
   # chr       | chr_pos  |rsid      | position  | N_eQTL  | PV_eQTL | beta_eQTL | varbeta_eQTL
@@ -81,6 +82,10 @@ read_eQTL <- function(File_path,
   if(Skip%%1!=0){stop("Skip needs to be an integer")}
   if(Skip<0){stop("Skip needs to be >= 0")}
   
+  # Check that Sep is a character
+  if(!(is.character(Sep))){
+    stop("Skip needs to be a *character* specifying how data are separated.")}
+  
   # Check that Rsid_col is an integer
   if(!(is.numeric(Rsid_col))){stop("Rsid_col needs to be an integer")}
   if(Rsid_col%%1!=0){stop("Rsid_col needs to be an integer")}
@@ -88,7 +93,13 @@ read_eQTL <- function(File_path,
   # Check that Pos_col is an integer
   if(!(is.numeric(Pos_col))){stop("Pos_col needs to be an integer")}
   if(Pos_col%%1!=0){stop("Pos_col needs to be an integer")}
-
+  
+  # Initializing colClasses:
+  #  NULL means the column won't be imported.
+  colClasses <- rep("NULL", Columns)
+  # Initializing what the column headers will be
+  table_names <- rep("",Columns)
+  
   # If N and PV arguments supplied:
   if(!(missing(N_col)) && !(missing(PV_col))){
     # Make sure beta and varbeta were *not* also supplied
@@ -96,42 +107,41 @@ read_eQTL <- function(File_path,
       stop("Please only include N_col and PV_col *OR* Beta_col and Varbeta_col.")
     }
     else{
-    	colClasses <- rep("NULL", Columns)
-    	table_names <- rep("",Columns)
-    	table_names[Chr_col] <- "chr"
-    	table_names[Pos_col] <- "position"
-    	table_names[Rsid_col]<- "rsid"
-			table_names[N_col] <- "N_eQTL"
+  		table_names[N_col] <- "N_eQTL"
+  		colClasses[N_col] <- "integer"
+  		
+  		# Initializing PV as character because fread() doesn't like super
+  		#  small numbers
 			table_names[PV_col] <- "PV_eQTL"
-			colClasses[N_col] <- "integer"
 			colClasses[PV_col] <- "double"
     }
   }
   # If beta and varbeta supplied:
   else if(!(missing(Beta_col)) && !(missing(Varbeta_col))){
-    colClasses <- rep("NULL", Columns)
-  	table_names <- rep("",Columns)
-  	table_names[Chr_col] <- "chr"
-  	table_names[Pos_col] <- "position"
-  	table_names[Rsid_pos] <- "rsid" 
   	table_names[Beta_col] <- "beta_eQTL"
-  	table_names[Varbeta_col] <- "varbeta_eQTL"
   	colClasses[Beta_col] <- "double"
+  	
+  	table_names[Varbeta_col] <- "varbeta_eQTL"
   	colClasses[Varbeta_col] <- "double"
   }
   # Else, use didn't supply the appropriate arguments:
   else{stop("Please supply N_col and PV_col *or* Beta_col and Varbeta_col")}
   
-  colClasses[Pos_col] <- "integer"
+  table_names[Chr_col] <- "chr"
   colClasses[Chr_col] <- "character"
+  
+  table_names[Pos_col] <- "position"
+  colClasses[Pos_col] <- "integer"
+  
+  table_names[Rsid_col]<- "rsid"
   colClasses[Rsid_col] <- "integer"
 
-  # Remove all the NULL columns from the table names
+  # Remove all the empty columns from the table names
   table_names <- table_names[!table_names %in% ""]
-  print(table_names)
+  print(paste("Importing eQTL columns:",table_names))
   
   # na.omit() removes rows from a table if any of the columns have an 'NA'
-  table <- na.omit(fread(
+  table <- na.omit(fread(         # Omit a row that has NA in it!
       input=File_path,               
       skip=Skip,                  # Skip lines when importing
       sep=Sep,                    # Indicate what elements are separated by
@@ -148,13 +158,14 @@ read_eQTL <- function(File_path,
     # If the variance column is actually SE,
     if (Var_is_SE){
       # This column is standard error, so square it to make it into variance
+      print(paste("Class of varbeta_eqtl is",class(table$varbeta_eQTL[1])))
       table$varbeta_eQTL <- (table$varbeta_eQTL)^2
     }
     
   }
   
   # Add chr_pos column to table
-  table$chr_pos <- paste(table$chr, table$position, sep="_")
+  table$chr_pos <- paste(table$chr, as.character(table$position), sep="_")
   
   return(table)
 }
@@ -271,6 +282,7 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
   # NOTE: 
   #		File_path, Columns, Chr, Rsid, Pos, MAF, and PV are required.
   #		Either N *or* Beta and Varbeta required. NOT ALL 3!!!
+  #   If a row has a NA in it, it will be omitted!
   #
   # Returns: table with columns (either N or beta and varbeta):
   # chr       | chr_pos  | rsid      | position  | MAF    | N_GWAS  | PV_GWAS | beta_GWAS | varbeta_GWAS
@@ -298,15 +310,23 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
   # Check that Columns is an integer
   if(!(is.numeric(Columns))){stop("Columns needs to be an integer")}
   if(Columns%%1!=0){stop("Columns needs to be an integer")}
+  
+  # Check that Chr_col is an integer
+  if(!(is.numeric(Chr_col))){stop("Chr_col needs to be an integer")}
+  if(Chr_col%%1!=0){stop("Chr_col needs to be an integer")}
 
-  # Check that Chr_pos is an integer
-  if(!(is.numeric(Chr_pos_col))){stop("Chr_pos_pos needs to be an integer")}
+  # Check that Chr_pos_col is an integer
+  if(!(is.numeric(Chr_pos_col))){stop("Chr_pos_col needs to be an integer")}
   if(Chr_pos_col%%1!=0){stop("Chr_pos_col needs to be an integer")}
 
   # Check that Skip is an integer >=0
   if(!(is.numeric(Skip))){stop("Skip needs to be an integer")}
   if(Skip%%1!=0){stop("Skip needs to be an integer")}
   if(Skip<0){stop("Skip needs to be >= 0")}
+  
+  # Check that Sep is a character
+  if(!(is.character(Sep))){
+    stop("Skip needs to be a *character* specifying how data are separated.")}
   
   # Check that Rsid_col is an integer
   if(!(is.numeric(Rsid_col))){stop("Rsid_col needs to be an integer")}
@@ -319,6 +339,12 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
   # Check that MAF_col is an integer
   if(!(is.numeric(MAF_col))){stop("MAF_col needs to be a double")}
   if(MAF_col%%1!=0){stop("MAF_col needs to be an integer")}
+  
+  # Initializing colClasses:
+  #  NULL means the column won't be imported.
+  colClasses <- rep("NULL", Columns)
+  # Initializing what the column headers will be
+  table_names <- rep("",Columns)
 
   # If N argument supplied:
   if(!(missing(N_col))){
@@ -327,54 +353,52 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
       stop("Please only include N_col *OR* Beta_col and Varbeta_col.")
     }
     else{
-    	colClasses <- rep("NULL", Columns)
-    	table_names <- rep("",Columns)
-    	table_names[Chr_col] <- "Chr"
-    	table_names[Chr_pos_col] <- "Chr_pos"
-    	table_names[Pos_col] <- "position"
-    	table_names[Rsid_col]<- "rsid"
-    	table_names[MAF_col]<- "MAF"
   		table_names[N_col] <- "N_GWAS"
-  		table_names[PV_col] <- "PV_GWAS"
   		colClasses[N_col] <- "integer"
     }
   }
   # If beta and varbeta supplied:
   else if(!(missing(Beta_col)) && !(missing(Varbeta_col))){
-    colClasses <- rep("NULL", Columns)
-  	table_names <- rep("",Columns)
-  	table_names[Chr_col] <- "Chr"
-  	table_names[Chr_pos_col] <- "Chr_pos"
-  	table_names[Pos_col] <- "position"
-  	table_names[Rsid_col] <- "rsid" 
-  	table_names[MAF_col]<- "MAF"
-  	table_names[PV_col] <- "PV_GWAS"
   	table_names[Beta_col] <- "beta_GWAS"
-  	table_names[Varbeta_col] <- "varbeta_GWAS"
   	colClasses[Beta_col] <- "double"
+  	
+  	table_names[Varbeta_col] <- "varbeta_GWAS"
   	colClasses[Varbeta_col] <- "double"
   }
   # Else, use didn't supply the appropriate arguments:
   else{stop("Please supply N_col *or* Beta_col and Varbeta_col")}
   
+  table_names[Chr_col] <- "Chr"
   colClasses[Chr_col] <- "character"
+  
+  table_names[Chr_pos_col] <- "Chr_pos"
   colClasses[Chr_pos_col] <- "character"
+  
+  table_names[Pos_col] <- "position"
   colClasses[Pos_col] <- "integer"
+  
+  table_names[Rsid_col]<- "rsid"
   colClasses[Rsid_col] <- "character"
+  
+  table_names[MAF_col]<- "MAF"
   colClasses[MAF_col] <- "double"
+  
+  # PV is initialized as a character because fread() doesn't like 
+  #   super small numbers.
+  table_names[PV_col] <- "PV_GWAS"
   colClasses[PV_col] <- "character"
 
   # Remove all the empty columns from the table names
   table_names <- table_names[!table_names %in% ""]
-  print(table_names)
+  print(paste("Importing GWAS columns:",table_names))
   
   # na.omit() removes rows from a table if any of the columns have an 'NA'
-  table <- na.omit(fread(
+  table <- na.omit(fread(         # Omits rows that have any NAs in them!
       input=File_path,               
       skip=Skip,                  # Skip lines when importing
-      sep=Sep,                    # Indicate what elements are separated by
+      sep=Sep,                    # Indicate what the elements are separated by
       stringsAsFactors = FALSE,   # Strings should be strings, not factors
-      colClasses = colClasses,    # Define column classes (see above)
+      colClasses = colClasses,    # Define column classes (NULL is skipped)
       data.table = FALSE          # Output a data.frame, not table
       ))
   print(head(table))
@@ -396,6 +420,7 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
     # If the variance column is actually SE,
     if (Var_is_SE){
       # This column is standard error, so square it to make it into variance
+      print(paste("Class of varbeta_gwas is",class(table$varbeta_GWAS[1])))
       table$varbeta_GWAS <- (table$varbeta_GWAS)^2
     }
     
