@@ -154,6 +154,17 @@ read_eQTL <- function(File_path,
   # Name the column headers
   names(table) <- table_names
   
+  # P-values imported:
+  if(!(missing(PV_col))){
+    # Convert pvalues to doubles; any pvalue below R's minimum recognizable number
+    #  is converted to 1e-300:
+    table$PV_eQTL <- as.double(table$PV_eQTL)
+    
+    indeces <- which(table$PV_eQTL == 0)
+    
+    table$PV_eQTL[indeces] <- 1e-300
+  }
+  
   if (!(missing(Varbeta_col))){
     # If the variance column is actually SE,
     if (Var_is_SE){
@@ -410,11 +421,11 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
   if(!(missing(PV_col))){
   	# Convert pvalues to doubles; any pvalue below R's minimum recognizable number
   	#  is converted to 1e-300:
-  	table$pvalues <- as.double(table$pvalues)
+  	table$PV_GWAS <- as.double(table$PV_GWAS)
   
-  	indeces <- which(table$pvalues == 0)
+  	indeces <- which(table$PV_GWAS == 0)
   
-  	table$pvalues[indeces] <- 1e-300
+  	table$PV_GWAS[indeces] <- 1e-300
   }
   if (!(missing(Varbeta_col))){
     # If the variance column is actually SE,
