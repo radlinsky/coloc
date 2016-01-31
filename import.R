@@ -798,7 +798,7 @@ get_sentinal_snp_regions <- function(GWAS_table,Range=9e5,Cutoff_PV=5e-8){
   #
   significant_PV_indeces <- which(GWAS_table$PV_GWAS<=Cutoff_PV)
   significant_PVs <- GWAS_table$PV_GWAS[significant_PV_indeces]
-  chr_loci <- matrix(unlist(strsplit(GWAS_table$chr_pos[significant_PV_indeces],split = ":")),ncol=2,byrow=TRUE)
+  chr_loci <- matrix(unlist(strsplit(GWAS_table$chr_pos[significant_PV_indeces],split = "_")),ncol=2,byrow=TRUE)
   df <- data.frame(pvalues = significant_PVs,
                    index = significant_PV_indeces,
                    chr =chr_loci[,1],
