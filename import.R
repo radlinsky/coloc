@@ -379,10 +379,10 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
   # Else, use didn't supply the appropriate arguments:
   else{stop("Please supply N_col *or* Beta_col and Varbeta_col")}
   
-  table_names[Chr_col] <- "Chr"
+  table_names[Chr_col] <- "chr"
   colClasses[Chr_col] <- "character"
   
-  table_names[Chr_pos_col] <- "Chr_pos"
+  table_names[Chr_pos_col] <- "chr_pos"
   colClasses[Chr_pos_col] <- "character"
   
   table_names[Pos_col] <- "position"
