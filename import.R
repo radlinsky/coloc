@@ -29,6 +29,7 @@ read_eQTL <- function(File_path,
                       Columns,
                       Skip=1,
                       Sep="\t",
+                      Gene=,
                       Chr_col,
                       Rsid_col,
                       Pos_col,
@@ -61,15 +62,19 @@ read_eQTL <- function(File_path,
   #   If a row has a NA in it, it will be omitted!
   #
   # Returns: table with columns (either N and PV or beta and varbeta):
-  # chr       | chr_pos  |rsid      | position  | N_eQTL  | PV_eQTL | beta_eQTL | varbeta_eQTL
-  # character | character|character | integer   | integer | double  | double    | double
+  # gene     | chr       | chr_pos  |rsid      | position  | N_eQTL  | PV_eQTL | beta_eQTL | varbeta_eQTL
+  # character| character | character|character | integer   | integer | double  | double    | double
 
   # Check for filepath validity
   if(missing(File_path)){stop("Please include file_path")}
   if(!(file.exists(File_path))){stop(paste("File not found:\n",File_path))}
 
   # Checking that Columns, Chr, Rsid, and Position columns were specified.
-  if(missing(Columns) || missing(Chr_col) || missing(Rsid_col) || missing(Pos_col)){
+  if(missing(Columns) 
+     || missing(Gene)
+     || missing(Chr_col) 
+     || missing(Rsid_col) 
+     || missing(Pos_col)){
     stop("Must include Columns, Chr_col, Rsid_col, and Pos_cols.")
   }
   
@@ -85,6 +90,12 @@ read_eQTL <- function(File_path,
   # Check that Sep is a character
   if(!(is.character(Sep))){
     stop("Skip needs to be a *character* specifying how data are separated.")}
+  
+  # Check that Gene is a non-empty character
+  if(!(is.character(Gene)) || length(Gene) == 0){
+    stop(paste("Gene needs to be a non-zero-length character, not: '",
+               as.character(Gene),"'",sep=""))
+  }
   
   # Check that Rsid_col is an integer
   if(!(is.numeric(Rsid_col))){stop("Rsid_col needs to be an integer")}
@@ -177,6 +188,9 @@ read_eQTL <- function(File_path,
   
   # Add chr_pos column to table
   table$chr_pos <- paste(table$chr, as.character(table$position), sep=":")
+  
+  # Add gene name column
+  table$gene <- Gene
   
   return(table)
 }
