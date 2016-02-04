@@ -34,7 +34,7 @@ read_eQTL <- function(File_path,
                       Rsid_col,
                       Pos_col,
                       N_col,
-                      N,
+                      N_eQTL,
                       PV_col,
                       Beta_col,
                       Varbeta_col,
@@ -54,12 +54,12 @@ read_eQTL <- function(File_path,
   #		Rsid_col: Column index with Rsid info
   #		Pos_col: Column index with hg19 position info
   #		N_col: eQTL sample size column index
-  #   N: eQTL sample size for all SNPs
+  #   N_eQTL: eQTL sample size for all SNPs
   #		PV_col: P-value column index
   #		Beta_col: beta column index
   #		Varbeta: variance of beta column index
   # NOTE: 
-  #		File_path, Columns, Chr, Rsid, Pos, and (N or N_col) are required.
+  #		File_path, Columns, Chr, Rsid, Pos, and (N_eQTL or N_col) are required.
   #		Either PV *or* Beta and Varbeta required. NOT ALL 3!!!
   #   If a row has a NA in it, it will be omitted!
   #
@@ -80,8 +80,8 @@ read_eQTL <- function(File_path,
     stop("Must include Columns, Chr_col, Rsid_col, and Pos_cols.")
   }
   # Check that N_col or N were specified
-  if(missing(N_col) && missing(N)){
-    stop("Must include N_col or N.")
+  if(missing(N_col) && missing(N_eQTL)){
+    stop("Must include N_col or N_eQTL.")
   }
   
   # Check that Columns is an integer
@@ -147,8 +147,8 @@ read_eQTL <- function(File_path,
     colClasses[N_col] <- "integer"
   }
   # Else make sure N was supplied:
-  else if (missing(N)){
-    stop("Must specify N_col or N.")
+  else if (missing(N_GWAS)){
+    stop("Must specify N_col or N_GWAS.")
   }
   
   table_names[Chr_col] <- "chr"
@@ -207,8 +207,8 @@ read_eQTL <- function(File_path,
   # Add gene name column
   table$gene <- Gene
   
-  if (!missing(N)){
-    table$N_eQTL = N
+  if (!missing(N_eQTL)){
+    table$N_eQTL = N_eQTL
   }
   
   return(table)
@@ -320,12 +320,12 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
   #		Pos_col: Column index with hg19 position info
   #		MAF_col: Column index withe the MAF info
   #		N_col: GWAS sample size column index
-  #   N: GWAS sample size for all SNPs
+  #   N_GWAS: GWAS sample size for all SNPs
   #		PV_col: P-value column index
   #		Beta_col: beta column index
   #		Varbeta: variance of beta column index
   # NOTE: 
-  #		N_col or N required!
+  #		N_col or N_GWAS required!
   #   If a row has a NA in it, it will be omitted!
   #
   # Returns: table with columns:
@@ -351,8 +351,8 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
     stop("Must include Columns, Chr_col, Chr_pos_col, Rsid_col, and Pos_cols.")
   }
   # Check that N_col or N were specified
-  if(missing(N_col) && missing(N)){
-    stop("Must include N_col or N.")
+  if(missing(N_col) && missing(N_GWAS)){
+    stop("Must include N_col or N_GWAS.")
   }
   
   # Check that Columns is an integer
@@ -395,8 +395,8 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
   table_names <- rep("",Columns)
   
   if(!(missing(N_col))){
-    if(!(missing(N))){ # Make sure only N_col or N specified
-      stop("Please only include N_col *or* N.")
+    if(!(missing(N_GWAS))){ # Make sure only N_col or N specified
+      stop("Please only include N_col *or* N_GWAS.")
     }
     table_names[N_col] <- "N_GWAS"
     colClasses[N_col] <- "integer"
@@ -479,8 +479,8 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
   # Also, MAF of 0 causes errors in coloc.abf()
   table <- table[table$MAF>0.001, ]
   
-  if (!(missing(N))){
-    table$N_GWAS = N
+  if (!(missing(N_GWAS))){
+    table$N_GWAS = N_GWAS
   }
 
   return(table)
