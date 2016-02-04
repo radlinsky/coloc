@@ -298,7 +298,7 @@ import_genes <- function(Genes, Directory, Pattern="_eQTL.txt"){
 }
 
 read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
-                      Chr_pos_col, Rsid_col, Pos_col, MAF_col, N_col,
+                      Chr_pos_col, Rsid_col, Pos_col, MAF_col, N_col, N_GWAS,
                       PV_col, Beta_col, Varbeta_col, Var_is_SE = TRUE){
   # This function imports one GLGC .txt file and
   # 	returns a table with summary stats for coloc.abf()
