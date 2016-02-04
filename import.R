@@ -34,6 +34,7 @@ read_eQTL <- function(File_path,
                       Rsid_col,
                       Pos_col,
                       N_col,
+                      N,
                       PV_col,
                       Beta_col,
                       Varbeta_col,
@@ -57,11 +58,11 @@ read_eQTL <- function(File_path,
   #		Beta_col: beta column index
   #		Varbeta: variance of beta column index
   # NOTE: 
-  #		File_path, Columns, Chr, Rsid, and Pos are required.
-  #		Either N and PV *or* Beta and Varbeta required. NOT ALL 4!!!
+  #		File_path, Columns, Chr, Rsid, Pos, and (N or N_col) are required.
+  #		Either PV *or* Beta and Varbeta required. NOT ALL 3!!!
   #   If a row has a NA in it, it will be omitted!
   #
-  # Returns: table with columns (either N and PV or beta and varbeta):
+  # Returns: table with columns (either PV or beta and varbeta):
   # gene     | chr       | chr_pos  |rsid      | position  | N_eQTL  | PV_eQTL | beta_eQTL | varbeta_eQTL
   # character| character | character|character | integer   | integer | double  | double    | double
 
@@ -76,6 +77,11 @@ read_eQTL <- function(File_path,
      || missing(Rsid_col) 
      || missing(Pos_col)){
     stop("Must include Columns, Chr_col, Rsid_col, and Pos_cols.")
+  }
+  # Check that N_col or N were specified
+  
+  if(missing(N_col) && missing(N)){
+    stop("Must include N_col or N.")
   }
   
   # Check that Columns is an integer
@@ -111,16 +117,13 @@ read_eQTL <- function(File_path,
   # Initializing what the column headers will be
   table_names <- rep("",Columns)
   
-  # If N and PV arguments supplied:
-  if(!(missing(N_col)) && !(missing(PV_col))){
+  # If PV argument supplied:
+  if(!(missing(PV_col))){
     # Make sure beta and varbeta were *not* also supplied
     if(!(missing(Beta_col)) || !(missing(Varbeta_col))){
-      stop("Please only include N_col and PV_col *OR* Beta_col and Varbeta_col.")
+      stop("Please only include PV_col *OR* Beta_col and Varbeta_col.")
     }
     else{
-  		table_names[N_col] <- "N_eQTL"
-  		colClasses[N_col] <- "integer"
-  		
   		# Initializing PV as character because fread() doesn't like super
   		#  small numbers
 			table_names[PV_col] <- "PV_eQTL"
@@ -136,7 +139,17 @@ read_eQTL <- function(File_path,
   	colClasses[Varbeta_col] <- "double"
   }
   # Else, use didn't supply the appropriate arguments:
-  else{stop("Please supply N_col and PV_col *or* Beta_col and Varbeta_col")}
+  else{stop("Please supply PV_col *or* Beta_col and Varbeta_col")}
+  
+  # If N_col supplied:
+  if(!missing(N_col)){ 
+    table_names[N_col] <- "N_eQTL"
+    colClasses[N_col] <- "integer"
+  }
+  # Else make sure N was supplied:
+  else if (missing(N)){
+    stop("Must specify N_col or N.")
+  }
   
   table_names[Chr_col] <- "chr"
   colClasses[Chr_col] <- "character"
@@ -147,7 +160,7 @@ read_eQTL <- function(File_path,
   table_names[Rsid_col]<- "rsid"
   colClasses[Rsid_col] <- "integer"
 
-  # Remove all the empty columns from the table names
+  # Remove all the empty columns from table_names
   table_names <- table_names[!table_names %in% ""]
   print(paste("Importing eQTL columns:",table_names))
   
