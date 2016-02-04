@@ -54,6 +54,7 @@ read_eQTL <- function(File_path,
   #		Rsid_col: Column index with Rsid info
   #		Pos_col: Column index with hg19 position info
   #		N_col: eQTL sample size column index
+  #   N: eQTL sample size for all SNPs
   #		PV_col: P-value column index
   #		Beta_col: beta column index
   #		Varbeta: variance of beta column index
@@ -79,7 +80,6 @@ read_eQTL <- function(File_path,
     stop("Must include Columns, Chr_col, Rsid_col, and Pos_cols.")
   }
   # Check that N_col or N were specified
-  
   if(missing(N_col) && missing(N)){
     stop("Must include N_col or N.")
   }
@@ -162,7 +162,9 @@ read_eQTL <- function(File_path,
 
   # Remove all the empty columns from table_names
   table_names <- table_names[!table_names %in% ""]
-  print(paste("Importing eQTL columns:",table_names))
+  for (col in table_names){
+    print(paste("Importing eQTL column:",col))
+  }
   
   # na.omit() removes rows from a table if any of the columns have an 'NA'
   table <- na.omit(fread(         # Omit a row that has NA in it!
@@ -204,6 +206,10 @@ read_eQTL <- function(File_path,
   
   # Add gene name column
   table$gene <- Gene
+  
+  if (!missing(N)){
+    table$N_eQTL = N
+  }
   
   return(table)
 }
@@ -313,16 +319,16 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
   #		Rsid_col: Column index with Rsid info
   #		Pos_col: Column index with hg19 position info
   #		MAF_col: Column index withe the MAF info
-  #		N_col: eQTL sample size column index
+  #		N_col: GWAS sample size column index
+  #   N: GWAS sample size for all SNPs
   #		PV_col: P-value column index
   #		Beta_col: beta column index
   #		Varbeta: variance of beta column index
   # NOTE: 
-  #		File_path, Columns, Chr, Rsid, Pos, MAF, and PV are required.
-  #		Either N *or* Beta and Varbeta required. NOT ALL 3!!!
+  #		N_col or N required!
   #   If a row has a NA in it, it will be omitted!
   #
-  # Returns: table with columns (either N or beta and varbeta):
+  # Returns: table with columns:
   # chr       | chr_pos  | rsid      | position  | MAF    | N_GWAS  | PV_GWAS | beta_GWAS | varbeta_GWAS
   # character | character| character | integer   | double | integer | double  | double    | double
   #
@@ -343,6 +349,10 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
      || missing(Rsid_col) 
      || missing(Pos_col)){
     stop("Must include Columns, Chr_col, Chr_pos_col, Rsid_col, and Pos_cols.")
+  }
+  # Check that N_col or N were specified
+  if(missing(N_col) && missing(N)){
+    stop("Must include N_col or N.")
   }
   
   # Check that Columns is an integer
@@ -383,29 +393,24 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
   colClasses <- rep("NULL", Columns)
   # Initializing what the column headers will be
   table_names <- rep("",Columns)
-
-  # If N argument supplied:
+  
   if(!(missing(N_col))){
-    # Make sure beta and varbeta were *not* also supplied
-    if(!(missing(Beta_col)) || !(missing(Varbeta_col))){
-      stop("Please only include N_col *OR* Beta_col and Varbeta_col.")
+    if(!(missing(N))){ # Make sure only N_col or N specified
+      stop("Please only include N_col *or* N.")
     }
-    else{
-  		table_names[N_col] <- "N_GWAS"
-  		colClasses[N_col] <- "integer"
-    }
+    table_names[N_col] <- "N_GWAS"
+    colClasses[N_col] <- "integer"
   }
+
   # If beta and varbeta supplied:
-  else if(!(missing(Beta_col)) && !(missing(Varbeta_col))){
+  if(!(missing(Beta_col)) && !(missing(Varbeta_col))){
   	table_names[Beta_col] <- "beta_GWAS"
   	colClasses[Beta_col] <- "double"
   	
   	table_names[Varbeta_col] <- "varbeta_GWAS"
   	colClasses[Varbeta_col] <- "double"
   }
-  # Else, use didn't supply the appropriate arguments:
-  else{stop("Please supply N_col *or* Beta_col and Varbeta_col")}
-  
+
   table_names[Chr_col] <- "chr"
   colClasses[Chr_col] <- "character"
   
@@ -428,7 +433,10 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
 
   # Remove all the empty columns from the table names
   table_names <- table_names[!table_names %in% ""]
-  print(paste("Importing GWAS columns:",table_names))
+  for (col in table_names){
+    print(paste("Importing GWAS column:",col))
+  }
+  
   
   # na.omit() removes rows from a table if any of the columns have an 'NA'
   table <- na.omit(fread(         # Omits rows that have any NAs in them!
@@ -458,7 +466,7 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
     # If the variance column is actually SE,
     if (Var_is_SE){
       # This column is standard error, so square it to make it into variance
-      print(paste("Class of varbeta_gwas is",class(table$varbeta_GWAS[1])))
+      print(paste("Class of varbeta_GWAS is",class(table$varbeta_GWAS[1])))
       table$varbeta_GWAS <- (table$varbeta_GWAS)^2
     }
     
@@ -470,6 +478,10 @@ read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
   # Remove SNPs with MAF < 0.001. Giambartolomei et. al. do so...
   # Also, MAF of 0 causes errors in coloc.abf()
   table <- table[table$MAF>0.001, ]
+  
+  if (!(missing(N))){
+    table$N_GWAS = N
+  }
 
   return(table)
 }
