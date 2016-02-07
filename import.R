@@ -146,9 +146,9 @@ read_eQTL <- function(File_path,
     table_names[N_col] <- "N_eQTL"
     colClasses[N_col] <- "integer"
   }
-  # Else make sure N was supplied:
-  else if (missing(N_GWAS)){
-    stop("Must specify N_col or N_GWAS.")
+  # Else make sure N_eQTL was supplied:
+  else if (missing(N_eQTL)){
+    stop("Must specify N_col or N_eQTL.")
   }
   
   table_names[Chr_col] <- "chr"
@@ -297,9 +297,21 @@ import_genes <- function(Genes, Directory, Pattern="_eQTL.txt"){
   return(gene_dict)
 }
 
-read_GWAS <- function(File_path, Columns, Skip=1, Sep="\t", Chr_col,
-                      Chr_pos_col, Rsid_col, Pos_col, MAF_col, N_col, N_GWAS,
-                      PV_col, Beta_col, Varbeta_col, Var_is_SE = TRUE){
+read_GWAS <- function(File_path,
+                      Columns,
+                      Skip=1,
+                      Sep="\t",
+                      Chr_col,
+                      Chr_pos_col,
+                      Rsid_col,
+                      Pos_col,
+                      MAF_col,
+                      N_col,
+                      N_GWAS,
+                      PV_col,
+                      Beta_col,
+                      Varbeta_col, 
+                      Var_is_SE = TRUE){
   # This function imports one GLGC .txt file and
   # 	returns a table with summary stats for coloc.abf()
   #
