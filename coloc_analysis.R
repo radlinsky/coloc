@@ -305,7 +305,7 @@ credibility_set <- function(Coloc_result, Cutoff = 0.95) {
   if (FALSE %in% grepl(pattern=":",x=Coloc_result$results$snp)){
     stop("Expected coloc_result$results$snp to be formatted as such: 'chr#:####'")
   }
-  split <- matrix(unlist(strsplit(Coloc_result$results$snp,split=":",ncol=2)))
+  split <- matrix(unlist(strsplit(Coloc_result$results$snp,split=":")),byrow = TRUE, ncol=2)
   all_snps <- split[,2]
 
   # Get log(ABF)s, take antilog
@@ -455,7 +455,7 @@ bedify_coloc <- function(Coloc_result, Chromosome, Gene_trait){
     stop("Expected coloc_result$results$snp to be formatted as such: 'chr#:####'")
   }
   # Split chr#:#### into a matrix
-  split <- matrix(unlist(strsplit(Coloc_result$results$snp,split=":",ncol=2)))
+  split <- matrix(unlist(strsplit(Coloc_result$results$snp,split=":")),byrow = TRUE, ncol=2)
   start <- as.integer(split[,2])
   end <- start+1
   snp_hyp4 <- Coloc_result$results$SNP.PP.H4
