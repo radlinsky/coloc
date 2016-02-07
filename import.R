@@ -443,6 +443,8 @@ read_GWAS <- function(File_path,
   table_names[PV_col] <- "PV_GWAS"
   colClasses[PV_col] <- "character"
 
+  print(table_names)
+  print(colClasses)
   # Remove all the empty columns from the table names
   table_names <- table_names[!table_names %in% "NULL"]
   for (col in table_names){
