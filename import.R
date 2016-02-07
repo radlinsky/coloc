@@ -444,7 +444,7 @@ read_GWAS <- function(File_path,
   colClasses[PV_col] <- "character"
 
   # Remove all the empty columns from the table names
-  table_names <- table_names[!table_names %in% ""]
+  table_names <- table_names[!table_names %in% "NULL"]
   for (col in table_names){
     print(paste("Importing GWAS column:",col))
   }
