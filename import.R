@@ -445,15 +445,9 @@ read_GWAS <- function(File_path,
   table_names[PV_col] <- "PV_GWAS"
   colClasses[PV_col] <- "character"
 
-  print(table_names)
-  print(colClasses)
   # Remove all the empty columns from the table names
-  table_names <- table_names[!table_names %in% "NULL"]
-  for (col in table_names){
-    print(paste("Importing GWAS column:",col))
-  }
-  
-  
+  table_names <- table_names[!table_names %in% ""]
+
   # na.omit() removes rows from a table if any of the columns have an 'NA'
   table <- na.omit(fread(         # Omits rows that have any NAs in them!
       input=File_path,               
