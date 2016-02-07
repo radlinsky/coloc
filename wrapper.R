@@ -25,6 +25,9 @@ if (substr(R_ver,11,15) != "3.1.1"){
   stop("Please load R module 3.1.1 before initiating this script")
 }
 
+# Start a stopwatch!
+start_time <- proc.time()[3]
+
 # Choose a path to load R packages from:
 lp <- "/project/chrbrolab/analysis/cradens/bin/r_libs/r_module_3_1_1"
 
@@ -36,8 +39,8 @@ require(data.table,lib=lp)
 require(hash,lib=lp) 
 require(coloc,lib=lp) 
 
-# Get working directory
-base <- getwd()
+base <- "/project/chrbrolab/analysis/cradens/coloc_for_yoson/script/"
+setwd(base)
 
 # Get functions from import.R
 source("import.R")
@@ -74,6 +77,11 @@ for (row in seq(from=1,to=length(traits$filepath))){
 while(length(list.files(pattern="_completed"))<length(traits$trait)){
   Sys.sleep(5)
 }
+
+# Time check
+elapsed = proc.time() - start_time
+system(paste("echo","Finished writing gene_trait tables. Elapsed time:",elapsed),wait=FALSE)
+
 # Remove the files that have _complete in their names
 #  (these files were used to determine with make_gene_trait_tables was finished)
 for(completed in list.files(pattern="_completed")){
@@ -100,6 +108,15 @@ for (file in merged_table_files){
 while (length(list.files(pattern="_completed"))<length(merged_table_files)){
   Sys.sleep(5)
 }
+
+# Time check
+elapsed = proc.time() - start_time
+system(paste("echo","Finished running coloc.abf(). Elapsed time:",elapsed),wait=FALSE)
+
+# If, after attempting to merge an eQTL and GWAS table, the merge is empty,
+#  make_gene_trait_tables writes a file that indicates this:
+empty_files = list.files(pattern="_completed_but_was_empty")
+
 # Delete files that have _completed in their name
 #   (these files were used to determine when all the merged gene_traits had been analyzed)
 for(completed in list.files(pattern="_completed")){
@@ -112,8 +129,8 @@ catch <- 0
 summary_table <- data.frame()
 
 # The number of summary tables to add to the final table is equal to the number of
-#  gene_traits analyzed:
-n_summary_tables <- length(merged_table_files)
+#  gene_traits analyzed minus the number of merged tables that ended up being empty:
+n_summary_tables <- length(merged_table_files) - length(empty_files)
 
 # Build the final summary table file.
 # Note: previous version of summary_table.txt is overwritten!
@@ -147,8 +164,8 @@ pattern <- "BEDIFIED"
 catch <- 0
 
 # The number of bed tables to add to the final table is equal to the number of
-#  gene_traits analyzed:
-n_bed_tables <- length(merged_table_files)
+#  gene_traits analyzed minus the number of merged tables that ended up being empty:
+n_bed_tables <- length(merged_table_files) - length(empty_files)
 
 # Build the final bedfile.
 # Note: previous version of coloc_bed_table.BED is overwritten!
@@ -169,7 +186,7 @@ while (catch < n_bed_tables){
   system(paste("echo percent done: ",percent_done,"%",sep=""),wait=FALSE)
   
   for (index in seq(from=1,to=n_files_to_analyze)){
-    table <- read.table(bed_files[index],stringsAsFactors = FALSE,skip = 1)
+    table <- read.table(bed_files[index],stringsAsFactors = FALSE,skip = 0)
     # Warning: don't set wait=False, or you'll potentially add a bed file 2+ times..
     system(paste("rm",bed_files[index]))
     write.table(table,file="coloc_bed_table.BED",
@@ -181,4 +198,8 @@ while (catch < n_bed_tables){
   }
 }
 
-system(paste("echo",n_summary_tables,"gene-by-traits were analyzed for colocalization."),wait=FALSE)
+# Stop a stopwatch!
+end_time <- proc.time()[3]
+elapse <- end_time - start_time
+
+system(paste("echo",n_summary_tables,"gene-by-traits were analyzed for colocalization. Total elapsed time:",elapsed),wait=FALSE)
