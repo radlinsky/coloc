@@ -79,8 +79,7 @@ while(length(list.files(pattern="_completed"))<length(traits$trait)){
 }
 
 # Time check
-elapsed = proc.time() - start_time
-system(paste("echo","Finished writing gene_trait tables. Elapsed time:",elapsed),wait=FALSE)
+elapsed_gt = proc.time()[3] - start_time
 
 # Remove the files that have _complete in their names
 #  (these files were used to determine with make_gene_trait_tables was finished)
@@ -110,8 +109,7 @@ while (length(list.files(pattern="_completed"))<length(merged_table_files)){
 }
 
 # Time check
-elapsed = proc.time() - start_time
-system(paste("echo","Finished running coloc.abf(). Elapsed time:",elapsed),wait=FALSE)
+elapsed_coloc = proc.time()[3] - start_time
 
 # If, after attempting to merge an eQTL and GWAS table, the merge is empty,
 #  make_gene_trait_tables writes a file that indicates this:
@@ -202,4 +200,6 @@ while (catch < n_bed_tables){
 end_time <- proc.time()[3]
 elapse <- end_time - start_time
 
+system(paste("echo","Writing gene_tables elapsed time:",elapsed_gt),wait=FALSE)
+system(paste("echo","Running coloc elapsed time:",elapsed_coloc),wait=FALSE)
 system(paste("echo",n_summary_tables,"gene-by-traits were analyzed for colocalization. Total elapsed time:",elapsed),wait=FALSE)
