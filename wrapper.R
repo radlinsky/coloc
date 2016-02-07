@@ -198,7 +198,7 @@ while (catch < n_bed_tables){
 
 # Stop a stopwatch!
 end_time <- proc.time()[3]
-elapse <- end_time - start_time
+elapsed <- end_time - start_time
 
 system(paste("echo","Writing gene_tables elapsed time:",elapsed_gt),wait=FALSE)
 system(paste("echo","Running coloc elapsed time:",elapsed_coloc),wait=FALSE)
