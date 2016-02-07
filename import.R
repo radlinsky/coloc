@@ -354,13 +354,15 @@ read_GWAS <- function(File_path,
   if(missing(File_path)){stop("Please include file_path")}
   if(!(file.exists(File_path))){stop(paste("File not found:\n",File_path))}
 
-  # Checking that Columns, Chr, Chr_pos, Rsid, and Position columns were specified.
+  # Checking that all required arguments are specified.
   if(missing(Columns) 
      || missing(Chr_col) 
      || missing(Chr_pos_col)
      || missing(Rsid_col) 
-     || missing(Pos_col)){
-    stop("Must include Columns, Chr_col, Chr_pos_col, Rsid_col, and Pos_cols.")
+     || missing(Pos_col)
+     || missing(MAF_col)
+     || missing(PV_col)){
+    stop("Must include Columns, Chr_col, Chr_pos_col, Rsid_col, Pos_cols., MAF_col, PV_col, and N_GWAS or N_Col")
   }
   # Check that N_col or N were specified
   if(missing(N_col) && missing(N_GWAS)){
