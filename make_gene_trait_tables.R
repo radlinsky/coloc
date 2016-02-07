@@ -29,6 +29,8 @@ lp <- "/project/chrbrolab/analysis/cradens/bin/r_libs/r_module_3_1_1"
 # Loads the required packages
 require(data.table,lib=lp) # eQTL_directory <- "/project/chrbrolab/coloc/data/ivs"
 
+base <- "/project/chrbrolab/analysis/cradens/coloc_for_yoson/script/"
+setwd(base)
 source("import.R")
 
 system("echo wrapper package and script dependencies loaded",wait=FALSE)
@@ -62,8 +64,8 @@ trait_table <- read_GWAS(File_path=GWAS_file,
                          Rsid_col=1, 
                          Pos_col=4,
                          MAF_col=8,
-                         #N_col,            # Using beta and varbeta, not N and PV
-                         #PV_col,           # Using beta and varbeta, not N and PV
+                         N_GWAS=100,
+                         PV_col=11,
                          Beta_col=9,
                          Varbeta_col=10,
                          Var_is_SE = TRUE)
@@ -87,7 +89,7 @@ microArray_alnTable<-get_microArray_table(microArray_alnTable_file)
 # t <- microArray_alnTable$TEScolClasses[Pos_col]
 # unique_TES_indeces <- order(t)[!duplicated(sort(t))]
 # microArray_alnTable <- microArray_alnTable[unique_TES_indeces,]
-genes <- merge(genes, microArray_alnTable, by=c("gene","chr"), all = FALSE)
+genes <- merge(genes, microArray_alnTable, by=c("gene"), all = FALSE)
 unique_genes <- unique(genes$gene)
 
 
@@ -98,7 +100,7 @@ for (Gene in unique_genes){
   
   gene_data <- genes[which(genes$gene==Gene),]
   g_chr <- unique(gene_data$chr)
-  if (length(g_chr>1)){
+  if (length(g_chr)>1){
     stop(paste("More than 1 chr associated with:",Gene))
   }
   # Use the mode of the gene TSS from the table (if equal numbers of different TSSs,
@@ -112,7 +114,7 @@ for (Gene in unique_genes){
   if (TRUE%in%grepl(g_chr,trait_table_PVs$chr)){
     # Get the loci from trait_table_PV that match the chromosome of the gene
     t_pos <- trait_table_PVs$chr_pos[which(grepl(g_chr,trait_table_PVs$chr))]
-    t_pos <- as.integer(matrix(unlist(strsplit(t_pos,split="_")),ncol=2,byrow=TRUE)[,2])
+    t_pos <- as.integer(matrix(unlist(strsplit(t_pos,split=":")),ncol=2,byrow=TRUE)[,2])
     # If the g_tss is within 1MB of the genome-wide significant PV:
     if (TRUE%in%(t_pos >= bottom & t_pos <= top)){
       # Add the gene to the sig_gene list if any of the trait PVs are close to the gene
@@ -139,19 +141,20 @@ n_genes_to_analyze <- length(genes_to_analyze$gene)
 gene_trait_tss <- paste(genes_to_analyze$gene,Trait,genes_to_analyze$TSS,sep="_")
 
 for (gene_row in seq(from=1,to=n_genes_to_analyze)){
-
+  
   gene_table <- read_eQTL(File_path=gene_files_to_analyze[gene_row],
                           Columns=11,
                           Skip=1,
-                          Sep="\t",
+                          Sep=",",
+                          Gene=genes_to_analyze$gene[gene_row],
                           Chr_col=3,
                           Rsid_col=2,
                           Pos_col=4,
-                          #N_col,       # Using beta and varbeta
-                          #PV_col,      # Using beta and varbeta
+                          N_eQTL= 100,
                           Beta_col=9,
                           Varbeta_col=10,
                           Var_is_SE = TRUE)
+  
   # Merge GWAS and eQTL table columns:
   #   only keep SNPs that have a shared hg19 position between GWAS and eQTL.
   merged_table <- merge(gene_table, 

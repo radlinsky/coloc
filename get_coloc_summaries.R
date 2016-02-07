@@ -21,6 +21,9 @@ lp <- "/project/chrbrolab/analysis/cradens/bin/r_libs/r_module_3_1_1"
 # Add your library path to the current session of R's library path variable
 .libPaths(lp)
 
+base <- "/project/chrbrolab/analysis/cradens/coloc_for_yoson/script/"
+setwd(base)
+
 # Get functions from import.R
 source("import.R")
 source("coloc_analysis.R")
@@ -44,7 +47,7 @@ cat(length(merged_table[,1])," shared SNPs to be analyzed for colocalisation ","
 
 # Build lists for coloc.abf() input
 #   SNPs will be named according to their hg19 position
-snp <- as.character(merged_table[,'position'])
+snp <- as.character(merged_table[,'chr_pos'])
 
 beta_GWAS <- merged_table[,'beta_GWAS']
 names(beta_GWAS) <- snp
@@ -61,14 +64,14 @@ names(varbeta_GWAS) <- snp
 MAF <- merged_table[,'MAF']
 names(MAF) <- snp
 
-# N_eQTL <- merged_table[,'N_eQTL']
-# names(N_eQTL) <- snp
+N_eQTL <- merged_table[,'N_eQTL']
+names(N_eQTL) <- snp
 
-# N_GWAS <- merged_table[,'N_GWAS']
-# names(N_GWAS) <- snp
+N_GWAS <- merged_table[,'N_GWAS']
+names(N_GWAS) <- snp
 
-eQTL_list <- list(beta = beta_eQTL, varbeta = varbeta_eQTL, type = "quant", snp = snp)
-GWAS_list <- list(beta = beta_GWAS, varbeta = varbeta_GWAS, type = "quant", snp = snp)
+eQTL_list <- list(beta = beta_eQTL, varbeta = varbeta_eQTL, type = "quant", N = N_eQTL, snp = snp)
+GWAS_list <- list(beta = beta_GWAS, varbeta = varbeta_GWAS, type = "quant", N = N_GWAS , snp = snp)
 
 result <- coloc.abf(dataset1 = eQTL_list, dataset2 = GWAS_list, MAF = MAF)
 
