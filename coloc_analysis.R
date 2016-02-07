@@ -25,6 +25,9 @@ lp <- "/project/chrbrolab/analysis/cradens/bin/r_libs/r_module_3_1_1"
 # Add your library path to the current session of R's library path variable
 .libPaths(lp)
 
+base <- "/project/chrbrolab/analysis/cradens/coloc_for_yoson/script/"
+setwd(base)
+
 require(coloc, lib=lp)
 require(hash, lib=lp)
 source("import.R")
@@ -299,7 +302,11 @@ credibility_set <- function(Coloc_result, Cutoff = 0.95) {
   n_snps <- length(Coloc_result$results$lABF.df1)
   
   # Get list of snps
-  all_snps <- Coloc_result$results$snp
+  if (FALSE %in% grepl(pattern=":",x=Coloc_result$results$snp)){
+    stop("Expected coloc_result$results$snp to be formatted as such: 'chr#:####'")
+  }
+  split <- matrix(unlist(strsplit(Coloc_result$results$snp,split=":",ncol=2)))
+  all_snps <- split[,2]
 
   # Get log(ABF)s, take antilog
   abf_df1 <- data.frame(abf=not_too_big(10^Coloc_result$results$lABF.df1),index=seq(from=1,to=n_snps))
@@ -443,7 +450,13 @@ bedify_coloc <- function(Coloc_result, Chromosome, Gene_trait){
   # Get the number of SNPs in the result
   nsnps <- Coloc_result$summary[1]
   
-  start <- as.integer(Coloc_result$results$snp)
+  # Make sure snp is formatted as expected
+  if (FALSE %in% grepl(pattern=":",x=Coloc_result$results$snp)){
+    stop("Expected coloc_result$results$snp to be formatted as such: 'chr#:####'")
+  }
+  # Split chr#:#### into a matrix
+  split <- matrix(unlist(strsplit(Coloc_result$results$snp,split=":",ncol=2)))
+  start <- as.integer(split[,2])
   end <- start+1
   snp_hyp4 <- Coloc_result$results$SNP.PP.H4
   eQTL_beta <- (Coloc_result$results$z.df1 * (sqrt(Coloc_result$results$V.df1)))

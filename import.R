@@ -162,10 +162,7 @@ read_eQTL <- function(File_path,
 
   # Remove all the empty columns from table_names
   table_names <- table_names[!table_names %in% ""]
-  for (col in table_names){
-    print(paste("Importing eQTL column:",col))
-  }
-  
+
   # na.omit() removes rows from a table if any of the columns have an 'NA'
   table <- na.omit(fread(         # Omit a row that has NA in it!
       input=File_path,               
@@ -175,8 +172,7 @@ read_eQTL <- function(File_path,
       colClasses = colClasses,    # Define column classes (see above)
       data.table = FALSE          # Output a data.frame, not table
       ))
-  print(head(table))
-  
+
   # Name the column headers
   names(table) <- table_names
   
@@ -195,7 +191,6 @@ read_eQTL <- function(File_path,
     # If the variance column is actually SE,
     if (Var_is_SE){
       # This column is standard error, so square it to make it into variance
-      print(paste("Class of varbeta_eqtl is",class(table$varbeta_eQTL[1])))
       table$varbeta_eQTL <- (table$varbeta_eQTL)^2
     }
     
@@ -457,7 +452,6 @@ read_GWAS <- function(File_path,
       colClasses = colClasses,    # Define column classes (NULL is skipped)
       data.table = FALSE          # Output a data.frame, not table
       ))
-  print(head(table))
   
   # Name the column headers
   names(table) <- table_names
@@ -476,7 +470,6 @@ read_GWAS <- function(File_path,
     # If the variance column is actually SE,
     if (Var_is_SE){
       # This column is standard error, so square it to make it into variance
-      print(paste("Class of varbeta_GWAS is",class(table$varbeta_GWAS[1])))
       table$varbeta_GWAS <- (table$varbeta_GWAS)^2
     }
     
