@@ -41,7 +41,7 @@ merged_file <- args[["file"]]
 merged_table<-read.table(merged_file,header=TRUE,stringsAsFactors = FALSE)
 
 if(length(merged_table[,1])==0){
-  write.table("hello world",file=paste(merged_file,"_completed",sep=""))
+  write.table("hello world",file=paste(merged_file,"_completed_but_was_empty",sep=""))
   stop(paste("Table was empty:",merged_file))
 }
 
