@@ -15,7 +15,6 @@ home_base = "/project/chrbrolab/analysis/cradens/coloc_for_yoson/"
 data = home_base+"data/"
 log = home_base+"log/"
 script = home_base+"script/"
-generally_useful = script+"generally_useful.py"
 folderize_by_column = "folderize_by_column.py"
 
 from subprocess import call
@@ -23,7 +22,7 @@ import sys
 # Add my script folder to the path (just in case some nincompoop tries to use
 #  this scipt in the future and gets errors because they didn't properly 
 #  import my helper_functions.py module...
-sys.path.append(generally_useful)
+sys.path.append(script)
 from helper_functions import make_consign_job_command, submit_consign_job
 import os
 if not os.path.isfile(script+folderize_by_column):
@@ -46,4 +45,3 @@ command = make_consign_job_command(
 print "Command for liver looks like:\n"+str(command)
 
 submit_consign_job(command)
-
